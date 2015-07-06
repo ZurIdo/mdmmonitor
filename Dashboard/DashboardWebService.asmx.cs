@@ -534,7 +534,7 @@ namespace Dashboard
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         // method return json string of the 3 top components
-        public String getTopComponents()
+        public String getTopComponent()
         {
             using (SqlConnection conn = this.getConnection())
             {
