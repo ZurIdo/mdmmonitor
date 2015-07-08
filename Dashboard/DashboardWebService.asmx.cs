@@ -531,15 +531,17 @@ namespace Dashboard
                 return json;
             }
         }
+        
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        // method return json string of the 3 top components
+        // method return json string of the 4 top components
         public String getTopComponent()
         {
             using (SqlConnection conn = this.getConnection())
             {
-                String sqlStr = "SELECT COUNT (Incident_ID) AS 'Mount',(Component)  FROM Customer_Messages WHERE Processing_Org = 'DS IMS' GROUP BY Component";
-                List<InternalIncident> internalIncidentsShouldBeClosedList = new List<InternalIncident>();
+                String sqlStr = "SELECT TOP (4) COUNT (Incident_Number) AS 'Mount', (Component) FROM FROM Customer_Messages  WHERE Processing_Org='DS IMS' GROUP BY Component ORDER BY 'Mount' DESC";
+
+                List<CustomerIncident> topComponentList = new List<CustomerIncident>();
 
 
                 SqlCommand cmd = new SqlCommand(sqlStr, conn);
@@ -561,37 +563,29 @@ namespace Dashboard
 
                     while (reader.Read())
                     {
-                        String[] splitChangeOn = reader[5].ToString().Split(' ');
-                        String changeOnDateStr = splitChangeOn[0];
-                        DateTime lastChangeOnDate = Convert.ToDateTime(changeOnDateStr);
-
-                        TimeSpan difference = DateTime.Now - lastChangeOnDate;
-
-                        if (difference.TotalDays > 7)
+                        CustomerIncident msg = new CustomerIncident()
                         {
-                            InternalIncident msg = new InternalIncident()
-                            {
-                                incidentNumber = reader[0].ToString(),
-                                component = reader[1].ToString(),
-                                priority = reader[2].ToString(),
-                                processor = reader[3].ToString(),
-                                processorID = reader[4].ToString(),
-                                changeOn = reader[5].ToString(),
-                                status = reader[6].ToString()
 
-                            };
+                            incidentID = reader[0].ToString(),
+                            incidentNumber = reader[1].ToString(),
+                            incidentYear = reader[2].ToString(),
+                            component = reader[3].ToString(),
+                            priority = reader[4].ToString(),
+                            processor = reader[5].ToString(),
+                            customer = reader[6].ToString()
+                                                     
 
-                            internalIncidentsShouldBeClosedList.Add(msg);
-                        }
-
+                        };
+                        topComponentList.Add(msg);
                     }
+                    
                 }
                 catch (Exception e)
                 {
                     DashboardLogger.writeToLogFile("Could not excute command in getInternalIncidentsShouldBeClosed method " + e.Message);
                 }
 
-                string json = new JavaScriptSerializer().Serialize(internalIncidentsShouldBeClosedList);
+                string json = new JavaScriptSerializer().Serialize(topComponentList);
                 return json;
             }
 
