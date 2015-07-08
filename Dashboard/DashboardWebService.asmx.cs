@@ -356,11 +356,8 @@ namespace Dashboard
                 {
                     SqlDataReader reader = cmd.ExecuteReader();
                     reader.Read();
-
-                    msg = new Pcc()
-                    {
-                        pcc = reader[0].ToString()
-                    };
+                    String pccString = reader.HasRows ? reader[0].ToString() : String.Empty;
+                    msg = new Pcc() { pcc = pccString };
                 }
                 catch (Exception e)
                 {
