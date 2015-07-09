@@ -358,6 +358,7 @@ namespace Dashboard
                     reader.Read();
                     String pccString = reader.HasRows ? reader[0].ToString() : String.Empty;
                     msg = new Pcc() { pcc = pccString };
+                   
                 }
                 catch (Exception e)
                 {
@@ -528,7 +529,66 @@ namespace Dashboard
                 return json;
             }
         }
+        
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        // method return json string of the 4 top components
+        public String getTopComponent()
+        {
+            using (SqlConnection conn = this.getConnection())
+            {
+                String sqlStr = "SELECT TOP (4) COUNT (Incident_Number) AS 'Mount', (Component) FROM FROM Customer_Messages  WHERE Processing_Org='DS IMS' GROUP BY Component ORDER BY 'Mount' DESC";
 
+                List<CustomerIncident> topComponentList = new List<CustomerIncident>();
+
+
+                SqlCommand cmd = new SqlCommand(sqlStr, conn);
+                cmd.CommandType = CommandType.Text;
+
+                try
+                {
+                    conn.Open();
+                }
+                catch (Exception e)
+                {
+                    DashboardLogger.writeToLogFile("Cannot open connection in getInternalIncidentsShouldBeClosed method" + e.Message);
+                }
+
+
+                try
+                {
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        CustomerIncident msg = new CustomerIncident()
+                        {
+
+                            incidentID = reader[0].ToString(),
+                            incidentNumber = reader[1].ToString(),
+                            incidentYear = reader[2].ToString(),
+                            component = reader[3].ToString(),
+                            priority = reader[4].ToString(),
+                            processor = reader[5].ToString(),
+                            customer = reader[6].ToString()
+                                                     
+
+                        };
+                        topComponentList.Add(msg);
+                    }
+                    
+                }
+                catch (Exception e)
+                {
+                    DashboardLogger.writeToLogFile("Could not excute command in getInternalIncidentsShouldBeClosed method " + e.Message);
+                }
+
+                string json = new JavaScriptSerializer().Serialize(topComponentList);
+                return json;
+            }
+
+
+        }
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         // method to return json string of total messages in PS/IMS/DEV queue
